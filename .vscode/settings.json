@@ -1,6 +1,5 @@
 {
   "editor.formatOnSave": true,
   "editor.accessibilitySupport": "off",
-  "editor.tabSize": 2,
-  "editor.maxTokenizationLineLength": 10000
+  "editor.tabSize": 2
 }

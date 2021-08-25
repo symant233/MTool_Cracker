@@ -6,6 +6,8 @@ const logger = require("koa-logger");
 const Router = require("koa-router");
 const bodyParser = require("koa-bodyparser");
 const zlib = require("zlib");
+const translator = require("./translator");
+
 const app = new Koa();
 const router = new Router();
 
@@ -31,7 +33,7 @@ router.get("/getMyInfo.php", (ctx) => {
     },
     limit: {
       scramble: true,
-      dataLen: 6,
+      dataLen: 10,
       quota: 0,
       engines: ["Google"],
       quotaBytes: 0,
@@ -46,8 +48,8 @@ router.get("/getMyInfo.php", (ctx) => {
     Mbyte: 1048576,
     myInfo: {
       uid: 0,
-      username: "Guest",
-      from: "Guest",
+      username: "Cracker",
+      from: "Cracker",
       activetill: 0,
       amount: 0,
       lifetime: 0,
@@ -61,23 +63,39 @@ router.get("/checkUpdate.php", (ctx) => {
 router.get("/trsStatus.php", (ctx) => {
   ctx.body = {
     queue: 0,
-    status: "Crack已接管, 点击开始翻译后请在命令行查看是否翻译完成...",
+    status: "Cracker已接管, 点击开始翻译后请在命令行查看是否翻译完成...",
     download: true,
     allowUpload: true,
     trsTime: 0,
   };
 });
 router.get("/MvTrsAd.php", (ctx) => {
-  ctx.status = 204; // 以后把原作者赞助链接补上
+  ctx.body = `<span style='color:red;'>
+  [cracker] 当前只有百度翻译, 选哪个都一样.
+  </span>`; // 以后把原作者赞助链接补上
 });
-router.post("/mvTrs.php", async (ctx, next) => {
-  // const id = ctx.request.query.bodyKey || "null";
+router.post("/mvTrs.php", async (ctx) => {
+  const id = ctx.request.query.bodyKey || "null";
   let buf = Buffer.from(ctx.request.body, "base64");
   ctx.request.body = JSON.parse(zlib.inflateSync(buf).toString("utf-8"));
-  const arr = JSON.parse(ctx.request.body.realDataJsonStr);
+  translator(id, ctx.request.body);
+  ctx.body = `ok 0 ${id}`;
 });
+router.get("/trsGet.php", (ctx) => {
+  const id = ctx.request.query.bodyKey || "null";
+  if (!fs.existsSync(`dist/${id}.json`)) ctx.body = "请在终端查看是否翻译完成!";
+  const data = JSON.parse(fs.readFileSync(`dist/${id}.json`, "utf8"));
+  data.data = JSON.stringify(data.data);
+  ctx.body = JSON.stringify(data);
+});
+router.get("/release.php", (ctx) => {
+  ctx.body = "请求被 cracker 拦截了, 取消 hosts 的更改就可访问了!";
+});
+
 router.allowedMethods({ throw: true });
 app.use(router.routes());
 
 http.createServer(app.callback()).listen(80);
 https.createServer(options, app.callback()).listen(443);
+
+console.log("服务已启动...");
