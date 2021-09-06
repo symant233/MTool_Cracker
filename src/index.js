@@ -83,7 +83,10 @@ router.post("/mvTrs.php", async (ctx) => {
 });
 router.get("/trsGet.php", (ctx) => {
   const id = ctx.request.query.bodyKey || "null";
-  if (!fs.existsSync(`dist/${id}.json`)) ctx.body = "请在终端查看是否翻译完成!";
+  if (!fs.existsSync(`dist/${id}.json`)) {
+    ctx.body = "请在终端查看是否翻译完成!";
+    return;
+  }
   const data = JSON.parse(fs.readFileSync(`dist/${id}.json`, "utf8"));
   data.data = JSON.stringify(data.data);
   ctx.body = JSON.stringify(data);

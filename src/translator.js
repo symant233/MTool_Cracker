@@ -23,7 +23,7 @@ async function translator(id, body) {
   while (page * step < arr.length) {
     str = arr
       .slice(page * step, ++page * step)
-      .map((s) => s.replace("\n", "_$")) // 替换已存在的换行符
+      .map((s) => s.replace("\n", "$$")) // 替换已存在的换行符
       .join("\n");
     console.log(
       `translator.js >>> 翻译前 ${page * step} 条, 共 ${arr.length} 条...`
@@ -31,6 +31,11 @@ async function translator(id, body) {
     let _obj = await baidu(str).catch((err) => {
       console.error(err);
     });
+    if (!_obj) {
+      page--;
+      console.log("translator.js >>> 重试中...");
+      await new Promise((r) => setTimeout(r, 2000));
+    }
     obj.data = Object.assign(obj.data, _obj);
   }
   fs.writeFileSync(`dist/${id}.json`, JSON.stringify(obj));
