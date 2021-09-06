@@ -1,16 +1,14 @@
 ### MTool
 
-由 [鬼才琪露诺](https://afdian.net/@AdventCirno) 开发的一款超赞工具, [置顶下载地址](https://afdian.net/p/d42dd1e234aa11eba42452540025c377) 或 [release.php](https://trs.cirno.biz/release.php?lang=chs).
+由 [鬼才琪露诺](https://afdian.net/@AdventCirno) 开发的一款超赞工具, [置顶下载贴](https://afdian.net/p/d42dd1e234aa11eba42452540025c377) 或 [release.php](https://trs.cirno.biz/release.php?lang=chs).
 
 请在 [Patreon](https://www.patreon.com/user?u=6139561) 或 [爱发电](https://afdian.net/@AdventCirno) 支持原作者.
 
 ### MTool Cracker
 
-首先这个工具做的真的很棒! 本来也想自己写一个类似的, 但仔细看了下原程序, 能兼容几乎所有主流 RPG 游戏框架 & 多种翻译接口 & 注入修改器几乎所有内容都可以修改... 要做出这种工具对我来说太难了... 就算千辛万苦造出轮子, 也不知道花了多少时间和精力了. 也可以看出工具作者对此倾注了多少心血在里面.
+本地拦截处理所有请求, 包括翻译功能. 翻译功能在本地实现, 目前实现了百度翻译的接口.
 
-每次不更新不能用翻译功能非常那啥... 抓包看了下, 把 `/trsStatus.php` 的响应 download 和 allowUpload 都改成 true 就可以不更新使用翻译了. 工具做了一半发现用 Fiddler 搞个自动响应就可以了.. 但不能白费力气, 还是做完, 到时候用自己申请的翻译 API, 也不会增加原作者调用的翻译 API 费用.
-
-不过再怎么说, 搞人家程序的 cracker 都不是什么值得炫耀的事, 先自己用着, 放私有仓库存档吧. 等过几年原作者开发出功能更多更完善的版本, 我再把这个旧版的 cracker 公开吧. (到时候估计 cracker 对最新版也没用了)
+你也可以自己实现其他翻译 API 的接口, 欢迎提交 PR.
 
 ---
 
@@ -55,7 +53,9 @@ npm start   # 先配置好再运行服务
 
 你也可以自己写一个其他翻译接口的方法 (DeepL, 腾讯, 必应, Google 等...) 到 `src/sdk.js`, 然后更改 `src/translator.js` 内的翻译方法为你定义的.
 
-### LICENSE
+### 声明
 
+- 此项目仅供学习使用
+- 使用此项目造成的后果由使用者自行承担
 - 不允许宣传本项目
-- 使用本项目请尽可能[支持原作者](<(https://afdian.net/@AdventCirno)>)
+- 使用本项目请尽可能 [支持原作者](https://afdian.net/@AdventCirno)
