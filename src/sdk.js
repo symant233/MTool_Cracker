@@ -26,7 +26,7 @@ async function baidu(query) {
     const obj = {};
     try {
       response.data.trans_result.forEach((i) => {
-        obj[i.src.replace("$$", "\n")] = i.dst.replace("$$", "\n");
+        obj[i.src.replace("$$", "\n")] = i.dst.replace("^$", "\n");
       }); // 换回替换了的换行符
     } catch (error) {
       console.log(response.data);
