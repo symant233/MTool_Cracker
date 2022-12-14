@@ -6,7 +6,8 @@ function addLeadingZeros(num, totalLength) {
 }
 
 async function translator(id, body) {
-  fs.mkdirSync(`dist/${id}`);
+  if (!fs.existsSync(`dist/${id}`)) fs.mkdirSync(`dist/${id}`);
+  fs.writeFileSync(`dist/${id}-origin.json`, body.realDataJsonStr);
   const arr = JSON.parse(body.realDataJsonStr);
   let str = "";
   let obj = {
@@ -45,12 +46,13 @@ async function translator(id, body) {
       fs.writeFileSync(`dist/err-${id}-p${page}.json`, JSON.stringify({ str }));
       console.log("translator.js >>> 已保存出错字段, 重试中...");
       await new Promise((r) => setTimeout(r, 5000)); // 等待
+    } else {
+      fs.writeFileSync(
+        `dist/${id}/p${addLeadingZeros(page, digit)}.json`,
+        JSON.stringify(_obj)
+      );
+      obj.data = Object.assign(obj.data, _obj);
     }
-    fs.writeFileSync(
-      `dist/${id}/p${addLeadingZeros(page, digit)}.json`,
-      JSON.stringify(_obj)
-    );
-    obj.data = Object.assign(obj.data, _obj);
   }
   fs.writeFileSync(`dist/${id}.json`, JSON.stringify(obj));
   console.log("translator.js >>> 翻译完成, 点击加载线上数据获取.");
