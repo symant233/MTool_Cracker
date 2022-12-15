@@ -1,5 +1,6 @@
 const MD5 = require("./md5");
 const axios = require("axios");
+const tencentcloud = require("tencentcloud-sdk-nodejs");
 require("dotenv").config({ path: "working.env" });
 
 async function baidu(query) {
@@ -36,4 +37,50 @@ async function baidu(query) {
   });
 }
 
-exports.baidu = baidu;
+async function tencent(arr) {
+  const client = new tencentcloud.tmt.v20180321.Client({
+    credential: {
+      secretId: process.env.TENCENTID,
+      secretKey: process.env.TENCENTKEY,
+    },
+    region: "ap-guangzhou",
+    profile: {
+      httpProfile: {
+        endpoint: "tmt.tencentcloudapi.com",
+      },
+    },
+  });
+  let data = {};
+  try {
+    data = await client.TextTranslateBatch({
+      Source: "ja",
+      Target: "zh",
+      ProjectId: 0,
+      SourceTextList: arr,
+    });
+  } catch (err) {
+    if (err.code == "UnsupportedOperation.TextTooLong") {
+      arrL = arr.slice(0, 50);
+      arrR = arr.slice(50);
+      const data1 = await client.TextTranslateBatch({
+        Source: "ja",
+        Target: "zh",
+        ProjectId: 0,
+        SourceTextList: arrL,
+      });
+      const data2 = await client.TextTranslateBatch({
+        Source: "ja",
+        Target: "zh",
+        ProjectId: 0,
+        SourceTextList: arrR,
+      });
+      data.TargetTextList = data1.TargetTextList.concat(data2.TargetTextList);
+    } else {
+      console.log(err);
+    }
+  }
+
+  return data.TargetTextList;
+}
+
+module.exports = { baidu, tencent };

@@ -6,7 +6,7 @@ const logger = require("koa-logger");
 const Router = require("koa-router");
 const bodyParser = require("koa-bodyparser");
 const zlib = require("zlib");
-const translator = require("./translator");
+const { trsBaidu, trsTencent } = require("./translator");
 
 const app = new Koa();
 const router = new Router();
@@ -71,14 +71,14 @@ router.get("/trsStatus.php", (ctx) => {
 });
 router.get("/MvTrsAd.php", (ctx) => {
   ctx.body = `<span style='color:red;'>
-  [cracker] 当前只有百度翻译, 选哪个都一样.
+  [cracker] 当前选择腾讯翻译, 在index.js中更改.
   </span>`; // 以后把原作者赞助链接补上
 });
 router.post("/mvTrs.php", async (ctx) => {
   const id = ctx.request.query.bodyKey || "null";
   let buf = Buffer.from(ctx.request.body, "base64");
   ctx.request.body = JSON.parse(zlib.inflateSync(buf).toString("utf-8"));
-  translator(id, ctx.request.body);
+  trsTencent(id, ctx.request.body); // 腾讯翻译, 百度改方法名为trsBaidu
   ctx.body = `ok 0 ${id}`;
 });
 router.get("/trsGet.php", (ctx) => {
