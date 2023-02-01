@@ -6,7 +6,7 @@
 
 ### MTool Cracker
 
-本地拦截处理所有请求, 包括翻译功能. 翻译功能在本地实现, 目前实现了百度翻译的接口.
+本地拦截处理所有请求, 包括翻译功能. 翻译功能在本地实现, 目前实现了百度、腾讯翻译的接口.
 
 你也可以自己实现其他翻译 API 的接口, 欢迎提交 PR.
 
@@ -28,7 +28,7 @@ npm install # 安装依赖
 127.0.0.1 trs.cirno.biz
 ```
 
-- 替换文件 `example.env` 内的 `APPID` 和 `KEY` 为你申请的[百度翻译开放平台](https://fanyi-api.baidu.com/manage/developer)能找到. 替换后保存, 重命名此文件为 `working.env`.
+- 替换文件 `example.env` 内的 `APPID` 和 `KEY` 为你申请的应用信息, [百度翻译开放平台](https://fanyi-api.baidu.com/manage/developer)能找到. 替换后保存, 重命名此文件为 `working.env`. / 使用**腾讯翻译**则为 `TENCENTID` 和 `TENCENTKEY`（强烈建议用腾讯翻译，开通[机器翻译](https://console.cloud.tencent.com/tmt)后到[API密钥管理](https://console.cloud.tencent.com/cam/capi)查看`SecretId`和`SecretKey`）.
 
 - 安装 `certs/trs.cirno.biz.crt` 到 `个人` (双击打开->安装证书->存储位置:当前用户->将所有的证书都放入下列存储:个人->完成). 你也可以用[此项目](https://github.com/kingkool68/generate-ssl-certs-for-local-development)自己生成.
 
@@ -51,7 +51,7 @@ npm start   # 先配置好再运行服务
 
 ### 开发
 
-你也可以自己写一个其他翻译接口的方法 (DeepL, 腾讯, 必应, Google 等...) 到 `src/sdk.js`, 然后更改 `src/translator.js` 内的翻译方法为你定义的.
+你也可以自己写一个其他翻译接口的方法 (DeepL, 必应, Google 等...) 到 `src/sdk.js`, 然后更改 `src/translator.js` 内的翻译方法为你定义的.
 
 ### 声明
 
