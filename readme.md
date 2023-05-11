@@ -19,6 +19,7 @@
 ```bash
 npm install # 安装依赖
 ```
+请到此处 [Release](https://github.com/symant233/MTool_Cracker/releases/tag/v1.0.0) 下载老版本的 Mtool 存档 `MTool_A10U13.7z` 或 `MTool_A10_Fix5.7z`。
 
 ### 配置
 
