@@ -12,8 +12,8 @@ const app = new Koa();
 const router = new Router();
 
 const options = {
-  key: fs.readFileSync("certs/trs.cirno.biz.key").toString(),
-  cert: fs.readFileSync("certs/trs.cirno.biz.crt").toString(),
+  key: fs.readFileSync("certs/trs.cirno.biz-key.pem").toString(),
+  cert: fs.readFileSync("certs/trs.cirno.biz.pem").toString(),
 };
 
 app.use(logger());

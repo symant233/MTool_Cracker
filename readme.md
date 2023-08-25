@@ -19,6 +19,7 @@
 ```bash
 npm install # 安装依赖
 ```
+
 请到此处 [Release](https://github.com/symant233/MTool_Cracker/releases/tag/v1.0.0) 下载老版本的 Mtool 存档 `MTool_A10U13.7z` 或 `MTool_A10_Fix5.7z`。
 
 ### 配置
@@ -29,9 +30,16 @@ npm install # 安装依赖
 127.0.0.1 trs.cirno.biz
 ```
 
-- 替换文件 `example.env` 内的 `APPID` 和 `KEY` 为你申请的应用信息, [百度翻译开放平台](https://fanyi-api.baidu.com/manage/developer)能找到. 替换后保存, 重命名此文件为 `working.env`. / 使用**腾讯翻译**则为 `TENCENTID` 和 `TENCENTKEY`（强烈建议用腾讯翻译，开通[机器翻译](https://console.cloud.tencent.com/tmt)后到[API密钥管理](https://console.cloud.tencent.com/cam/capi)查看`SecretId`和`SecretKey`）.
+- 替换文件 `example.env` 内的 `APPID` 和 `KEY` 为你申请的应用信息, [百度翻译开放平台](https://fanyi-api.baidu.com/manage/developer)能找到. 替换后保存, 重命名此文件为 `working.env`. / 使用**腾讯翻译**则为 `TENCENTID` 和 `TENCENTKEY`（强烈建议用腾讯翻译，开通[机器翻译](https://console.cloud.tencent.com/tmt)后到[API 密钥管理](https://console.cloud.tencent.com/cam/capi)查看`SecretId`和`SecretKey`）.
 
-- 安装 `certs/trs.cirno.biz.crt` 到 `个人` (双击打开->安装证书->存储位置:当前用户->将所有的证书都放入下列存储:个人->完成). 你也可以用[此项目](https://github.com/kingkool68/generate-ssl-certs-for-local-development)自己生成.
+- 证书：进入 `certs` 文件夹，该文件夹下有一个 `mkcert-v1.4.4-xxx.exe`，如果你运行不了或者怕病毒，可以去 https://github.com/FiloSottile/mkcert/releases 下载一个。在此文件夹打开命令行（Shift+右键，打开 Powershell），然后运行下面的命令：
+
+```bash
+mkcert-v1.4.4-windows-amd64.exe trs.cirno.biz
+mkcert-v1.4.4-windows-amd64.exe -install
+```
+
+> 命令会在文件夹中生成 `trs.cirno.biz.pem` 和 `trs.cirno.biz-key.pem`，代码中已经正确引用该文件名。另外在 `-install` 时会弹窗，点确定即可，这是为了 windows 能信任该证书。
 
 ### 运行服务
 
@@ -40,8 +48,6 @@ npm start   # 先配置好再运行服务
 ```
 
 服务启动完成打开工具 `nw.exe`.
-
-首次使用此项目时, 由于使用了自签证书, 请求会失败 (更新那里会显示 Failed to fetch). 在工具里右键空白处点击检查, 在 `Console` 标签页会显示红色的报错, 点链接, 选显示更多继续访问. 之后只要不再换证书就不会再请求失败了.
 
 ---
 
