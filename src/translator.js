@@ -12,11 +12,8 @@ function combineArrays(first, second) {
   }, {});
 }
 
-async function trsBaidu(id, body) {
-  fs.writeFileSync(`dist/${id}-origin.json`, body.realDataJsonStr);
-  const arr = JSON.parse(body.realDataJsonStr);
-  let str = "";
-  let obj = {
+function parseBody(id, body) {
+  return {
     hackVer: body.hackVer,
     gameTitle: body.gameTitle,
     gameTitleTrs: body.gameTitle,
@@ -30,6 +27,12 @@ async function trsBaidu(id, body) {
     cacheHitLength: 0,
     data: {},
   };
+}
+
+function initialCheck(id, body) {
+  fs.writeFileSync(`dist/${id}-origin.json`, body.realDataJsonStr);
+  const arr = JSON.parse(body.realDataJsonStr);
+  let obj = parseBody(id, body);
   let page = 0; // 翻译开始页, 第一页为0
   let step = 100; // 翻译步长, 默认100条一次请求
   if (!fs.existsSync(`dist/${id}`)) {
@@ -44,6 +47,12 @@ async function trsBaidu(id, body) {
     });
   }
   const digit = (arr.length / step).toString().split(".")[0].length;
+  return [arr, obj, page, step, digit];
+}
+
+async function trsBaidu(id, body) {
+  let [arr, obj, page, step, digit] = initialCheck(id, body);
+  let str = "";
   while (page * step < arr.length) {
     str = arr
       .slice(page * step, ++page * step)
@@ -75,36 +84,7 @@ async function trsBaidu(id, body) {
 }
 
 async function trsTencent(id, body) {
-  fs.writeFileSync(`dist/${id}-origin.json`, body.realDataJsonStr);
-  const arr = JSON.parse(body.realDataJsonStr);
-  let obj = {
-    hackVer: body.hackVer,
-    gameTitle: body.gameTitle,
-    gameTitleTrs: body.gameTitle,
-    versionId: body.versionId,
-    locale: body.locale,
-    engine: body.engine,
-    from: body.fromLang,
-    to: body.toLang,
-    oriFileName: `${id}.json`,
-    strLength: 0,
-    cacheHitLength: 0,
-    data: {},
-  };
-  let page = 0; // 翻译开始页, 第一页为0
-  let step = 100; // 翻译步长, 默认100条一次请求
-  if (!fs.existsSync(`dist/${id}`)) {
-    fs.mkdirSync(`dist/${id}`);
-  } else {
-    const files = fs.readdirSync(`dist/${id}`);
-    page = files.length;
-    console.log(`translator.js >>> 继续上次的翻译, 载入前${page}页数据...`);
-    files.forEach((file) => {
-      const data = JSON.parse(fs.readFileSync(`dist/${id}/${file}`, "utf8"));
-      obj.data = Object.assign(obj.data, data);
-    });
-  }
-  const digit = (arr.length / step).toString().split(".")[0].length;
+  let [arr, obj, page, step, digit] = initialCheck(id, body);
   while (page * step < arr.length) {
     arrPartial = arr.slice(page * step, ++page * step);
     console.log(
