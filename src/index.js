@@ -7,9 +7,9 @@ const Router = require("koa-router");
 const bodyParser = require("koa-bodyparser");
 const zlib = require("zlib");
 // 导入的翻译引擎接口方法
-const { trsBaidu, trsTencent } = require("./translator");
+const { trsBaidu, trsTencent, trsGemini } = require("./translator");
 
-const translator = trsTencent; // ! 在此更改为想要的翻译引擎
+const translator = trsGemini; // ! 在此更改为想要的翻译引擎
 
 const app = new Koa();
 const router = new Router();

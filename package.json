@@ -9,6 +9,7 @@
   "author": "symant233",
   "license": "GPL-3.0-or-later",
   "dependencies": {
+    "@google/generative-ai": "^0.3.1",
     "axios": "^0.21.1",
     "dotenv": "^10.0.0",
     "koa": "^2.13.1",

@@ -1,5 +1,6 @@
 const fs = require("fs");
 const { baidu, tencent } = require("./sdk");
+const GeminiTranslator = require("./gemini");
 
 function addLeadingZeros(num, totalLength) {
   return String(num).padStart(totalLength, "0");
@@ -116,4 +117,39 @@ async function trsTencent(id, body) {
   console.log("translator.js >>> 翻译完成, 点击加载线上数据获取.");
 }
 
-module.exports = { trsBaidu, trsTencent };
+async function trsGemini(id, body) {
+  let [arr, obj, page, step, digit] = initialCheck(id, body);
+  const gemini = new GeminiTranslator();
+  while (page * step < arr.length) {
+    arrPartial = arr.slice(page * step, ++page * step);
+    console.log(
+      `translator.js >>> p${page - 1} 翻译前 ${page * step} 条, 共 ${
+        arr.length
+      } 条...`
+    );
+    let _obj = await gemini
+      .translate(JSON.stringify(arrPartial))
+      .catch((err) => {
+        console.error(err);
+      });
+    if (!_obj) {
+      page--;
+      fs.writeFileSync(
+        `dist/err-${id}-p${page}.json`,
+        JSON.stringify(arrPartial)
+      );
+      console.log("translator.js >>> 已保存出错字段, 重试中...");
+      await new Promise((r) => setTimeout(r, 5000)); // 等待
+    } else {
+      fs.writeFileSync(
+        `dist/${id}/p${addLeadingZeros(page, digit)}.json`,
+        JSON.stringify(_obj)
+      );
+      obj.data = Object.assign(obj.data, _obj);
+    }
+  }
+  fs.writeFileSync(`dist/${id}.json`, JSON.stringify(obj));
+  console.log("translator.js >>> 翻译完成, 点击加载线上数据获取.");
+}
+
+module.exports = { trsBaidu, trsTencent, trsGemini };
