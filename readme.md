@@ -32,7 +32,9 @@ npm install # 安装依赖
 
 - **腾讯翻译**：替换文件 `example.env` 内的 `TENCENTID` 和 `TENCENTKEY`，开通[机器翻译](https://console.cloud.tencent.com/tmt)后到[API 密钥管理](https://console.cloud.tencent.com/cam/capi)查看 `SecretId` 和 `SecretKey`。
 
-- 百度翻译（不推荐）：替换文件 `example.env` 内的 `APPID` 和 `KEY` 为你申请的应用信息，[百度翻译开放平台](https://fanyi-api.baidu.com/manage/developer)能找到。替换后保存，重命名此文件为 `working.env`。另外还需更改 `src/index.js` 中翻译方法为 `trsBaidu`。
+- 百度翻译（不推荐）：替换文件 `example.env` 内的 `APPID` 和 `KEY` 为你申请的应用信息，[百度翻译开放平台](https://fanyi-api.baidu.com/manage/developer)能找到。
+
+> 📌 替换后保存，重命名此文件为 `working.env`。另外还需更改 `src/index.js` 中翻译方法为 `trsBaidu`。
 
 - 证书：进入 `certs` 文件夹，该文件夹下有一个 `mkcert-v1.4.4-xxx.exe`，如果你运行不了或者怕病毒，可以去 https://github.com/FiloSottile/mkcert/releases 下载一个。在此文件夹打开命令行（Shift+右键，打开 Powershell），然后运行下面的命令：
 
