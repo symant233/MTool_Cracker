@@ -6,7 +6,7 @@
 
 ## MTool Cracker
 
-本地拦截处理所有请求，包括翻译功能。翻译功能在本地实现，目前实现了百度、腾讯翻译的接口。
+本地拦截处理所有请求，包括翻译功能。翻译功能在本地实现，目前实现了百度、腾讯、Ollama 本地模型接口。
 
 你也可以自己实现其他翻译 API 的接口，欢迎提交 PR。
 
@@ -30,9 +30,21 @@ npm install # 安装依赖
 127.0.0.1 trs.cirno.biz
 ```
 
-- **腾讯翻译**：替换文件 `example.env` 内的 `TENCENTID` 和 `TENCENTKEY`，开通[机器翻译](https://console.cloud.tencent.com/tmt)后到[API 密钥管理](https://console.cloud.tencent.com/cam/capi)查看 `SecretId` 和 `SecretKey`。
+- **腾讯翻译**：替换文件 `example.env` 内的 `TENCENTID` 和 `TENCENTKEY`，开通[机器翻译](https://console.cloud.tencent.com/tmt)后到[API 密钥管理](https://console.cloud.tencent.com/cam/capi)查看 `SecretId` 和 `SecretKey`。并将 `TRANSLATOR_ENGINE=tencent`。
 
-- 百度翻译（不推荐）：替换文件 `example.env` 内的 `APPID` 和 `KEY` 为你申请的应用信息，[百度翻译开放平台](https://fanyi-api.baidu.com/manage/developer)能找到。还需更改 `src/index.js` 中翻译方法为 `trsBaidu`。
+- 百度翻译（不推荐）：替换文件 `example.env` 内的 `APPID` 和 `KEY` 为你申请的应用信息，[百度翻译开放平台](https://fanyi-api.baidu.com/manage/developer)能找到。并将 `TRANSLATOR_ENGINE=baidu`。
+
+- **Ollama 本地模型翻译（新增）**：
+  1. 安装并启动 [Ollama](https://ollama.com/)；
+  2. 拉取模型，例如：`ollama pull gemma4`；
+  3. 将 `TRANSLATOR_ENGINE=ollama`；
+  4. 按需配置：
+     - `OLLAMA_URL`（默认 `http://127.0.0.1:11434`）
+     - `OLLAMA_MODEL`（默认 `gemma4`）
+     - `OLLAMA_TIMEOUT`（请求超时，毫秒）
+     - `OLLAMA_TEMPERATURE`（默认 `1.0`）
+  5. 项目内置为“日语 -> 简体中文”翻译，不再暴露 `from/to` 配置。
+  6. 服务启动时会自动探活 Ollama 并检查目标模型是否已拉取，失败会在终端给出提示。
 
 > 📌 替换后保存，重命名 `example.env` 文件为 `working.env`。
 
@@ -62,7 +74,7 @@ npm start # 先配置好再运行服务 翻译加载成功前不要关闭终端
 
 ### 开发
 
-实现一个其他翻译接口的方法（DeepL，必应，Google 等...）到 `src/sdk.js`，然后更改 `src/translator.js` 内的翻译方法。欢迎提交 PR。
+实现一个其他翻译接口的方法（DeepL，必应，Google 等...）到 `src/providers/`，接口统一为 `translateBatch(string[]): Promise<string[]>`，然后在 `working.env` 中切换 `TRANSLATOR_ENGINE`。欢迎提交 PR。
 
 ### 声明
 
