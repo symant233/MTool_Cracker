@@ -36,11 +36,11 @@ npm install # 安装依赖
 
 - **Ollama 本地模型翻译（新增）**：
   1. 安装并启动 [Ollama](https://ollama.com/)；
-  2. 拉取模型，例如：`ollama pull gemma4`；
+  2. 拉取模型，例如：`ollama pull qwen3.5:2b`；
   3. 将 `TRANSLATOR_ENGINE=ollama`；
   4. 按需配置：
      - `OLLAMA_URL`（默认 `http://127.0.0.1:11434`）
-     - `OLLAMA_MODEL`（默认 `gemma4`）
+     - `OLLAMA_MODEL`（默认 `qwen3.5:2b`）
      - `OLLAMA_TIMEOUT`（请求超时，毫秒）
      - `OLLAMA_TEMPERATURE`（默认 `1.0`）
   5. 项目内置为“日语 -> 简体中文”翻译，不再暴露 `from/to` 配置。
