@@ -12,7 +12,7 @@ const config = {
       /\/+$/,
       "",
     ),
-    model: process.env.OLLAMA_MODEL || "qwen3.5:2b",
+    model: process.env.OLLAMA_MODEL || "gemma4",
     timeout: toNumber(process.env.OLLAMA_TIMEOUT, 120000),
     temperature: toNumber(process.env.OLLAMA_TEMPERATURE, 0.5),
   },

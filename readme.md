@@ -36,15 +36,18 @@ npm install # 安装依赖
 
 - **Ollama 本地模型翻译（新增）**：
   1. 安装并启动 [Ollama](https://ollama.com/)；
-  2. 拉取模型，例如：`ollama pull qwen3.5:2b`；
+  2. 拉取模型，例如：`ollama pull gemma4`；
   3. 将 `TRANSLATOR_ENGINE=ollama`；
   4. 按需配置：
      - `OLLAMA_URL`（默认 `http://127.0.0.1:11434`）
-     - `OLLAMA_MODEL`（默认 `qwen3.5:2b`）
+     - `OLLAMA_MODEL`（默认 `gemma4`）
      - `OLLAMA_TIMEOUT`（请求超时，毫秒）
-     - `OLLAMA_TEMPERATURE`（默认 `1.0`）
+     - `OLLAMA_TEMPERATURE`（建议 `0.2`，默认兜底值 `0.5`）
   5. 项目内置为“日语 -> 简体中文”翻译，不再暴露 `from/to` 配置。
   6. 服务启动时会自动探活 Ollama 并检查目标模型是否已拉取，失败会在终端给出提示。
+  7. Ollama 分页批次固定为 100 条（与主流程分页一致），不会在 Provider 内自动降温或自动拆分批次。
+  8. Ollama 请求使用 `/api/generate` 单轮模式，避免会话上下文干扰批量翻译。
+  9. 若某批次结构化输出持续异常，程序会自动回填该批次原文并继续，避免同一页无限重试卡死。
 
 > 📌 替换后保存，重命名 `example.env` 文件为 `working.env`。
 

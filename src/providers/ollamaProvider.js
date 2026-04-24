@@ -2,6 +2,29 @@ const axios = require("axios");
 const config = require("../config");
 const { parseStructuredJson } = require("./shared/json");
 
+const JAPANESE_RE = /[\u3040-\u30ff\u3400-\u9fff]/;
+
+const OUTPUT_SCHEMA = {
+  type: "object",
+  properties: {
+    t: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          i: { type: "integer" },
+          trs: { type: "string" },
+        },
+        required: ["i", "trs"],
+      },
+    },
+  },
+  required: ["t"],
+};
+
+const SYSTEM_PROMPT =
+  "你是游戏文本翻译引擎。任务是把日语逐条翻译为简体中文，并严格按给定索引返回结果。你只能输出 JSON，不得输出解释、注释、代码块、前后缀文本。翻译要求忠实原文，不做内容弱化、净化或委婉改写。";
+
 class TranslationCountMismatchError extends Error {
   constructor(expected, actual) {
     super(`Ollama 输出格式异常: 期望 ${expected} 条, 实际 ${actual} 条`);
@@ -11,11 +34,56 @@ class TranslationCountMismatchError extends Error {
   }
 }
 
+function hasJapanese(text) {
+  return JAPANESE_RE.test(String(text));
+}
+
 function toIndexedInput(textList) {
-  return textList.map((text, index) => ({
-    index,
-    text,
-  }));
+  return textList.map((text, index) => [index, String(text)]);
+}
+
+function buildUserPrompt(indexedInput, mode = "strict") {
+  const count = indexedInput.length;
+  const relaxedTail =
+    mode === "relaxed"
+      ? `
+12) 若你对某项不确定，trs 直接填该项原文，不得跳过；
+13) 绝对禁止返回空数组；即使无法翻译也必须返回 ${count} 条；
+`
+      : "";
+
+  return `请翻译数组 d 中每条文本，返回 JSON 对象，结构必须为：
+{"t":[{"i":0,"trs":"..."}, ...]}
+
+硬性约束（必须全部满足）：
+1) 仅返回一个 JSON 对象，不得包含 markdown 代码块标记（如 \`\`\`）；
+2) t 的长度必须等于输入条数 ${count}；
+3) i 必须完整覆盖 0..${count - 1}，每个 i 只能出现一次；
+4) 不得新增、删除、合并、拆分任意条目；
+5) 保持原顺序语义：每个 i 的 trs 必须对应同一个 i 的原文；
+6) 对关键语义保持直译，不要弱化或回避；
+7) 对“脚本格式片段”（如 ", 'sequential', 'continue', true）输出语义化中文短语，去掉英文逗号、英文引号、布尔字面量等符号；
+8) 对纯符号项（如 ; / =1）可原样返回；
+9) 对常见英文控制词（sequential / continue / random / idle / play）优先翻译成中文含义；
+10) 若 trs 内需要出现英文双引号字符 "，必须转义为 \\"；
+11) 示例：", 'sequential', 'continue', true -> 顺序继续； "'Kiss05', 'Idle -> 亲吻待机；
+${relaxedTail}
+
+输入 d（格式: [i, text]）:
+` + JSON.stringify(indexedInput);
+}
+
+function buildGeneratePayload(textList, mode = "strict") {
+  return {
+    model: config.ollama.model,
+    stream: false,
+    format: OUTPUT_SCHEMA,
+    options: {
+      temperature: config.ollama.temperature,
+    },
+    system: SYSTEM_PROMPT,
+    prompt: buildUserPrompt(toIndexedInput(textList), mode),
+  };
 }
 
 function normalizeTranslations(rawTranslations, expectedLength) {
@@ -23,12 +91,11 @@ function normalizeTranslations(rawTranslations, expectedLength) {
     throw new TranslationCountMismatchError(expectedLength, "无效");
   }
 
-  // 兼容模型偶发返回 string[] 的情况
   if (rawTranslations.every((item) => typeof item === "string")) {
     if (rawTranslations.length !== expectedLength) {
       throw new TranslationCountMismatchError(
         expectedLength,
-        rawTranslations.length,
+        rawTranslations.length
       );
     }
     return rawTranslations;
@@ -39,8 +106,9 @@ function normalizeTranslations(rawTranslations, expectedLength) {
     if (!item || typeof item !== "object") {
       return;
     }
-    const idx = Number(item.index);
-    const translation = item.translation ?? item.text ?? item.dst;
+
+    const idx = Number(item.i ?? item.index);
+    const translation = item.trs ?? item.translation ?? item.text ?? item.dst;
     if (!Number.isInteger(idx) || idx < 0 || idx >= expectedLength) {
       return;
     }
@@ -53,101 +121,86 @@ function normalizeTranslations(rawTranslations, expectedLength) {
   if (byIndex.some((item) => typeof item !== "string")) {
     throw new TranslationCountMismatchError(
       expectedLength,
-      rawTranslations.length,
+      rawTranslations.length
     );
   }
   return byIndex;
 }
 
-async function requestBatch(textList, temperature) {
-  const indexedInput = toIndexedInput(textList);
-
+async function requestBatch(textList, mode = "strict") {
   const response = await axios.post(
-    `${config.ollama.url}/api/chat`,
-    {
-      model: config.ollama.model,
-      stream: false,
-      format: {
-        type: "object",
-        properties: {
-          translations: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                index: { type: "integer" },
-                translation: { type: "string" },
-              },
-              required: ["index", "translation"],
-            },
-          },
-        },
-        required: ["translations"],
-      },
-      options: {
-        temperature,
-      },
-      messages: [
-        {
-          role: "system",
-          content:
-            "你是一个游戏文本翻译引擎。把用户提供的日语文本逐条翻译成简体中文。禁止解释、禁止合并、禁止遗漏，保持输入顺序，保持 index 不变。",
-        },
-        {
-          role: "user",
-          content:
-            `请只返回 JSON，结构为 {"translations":[{"index":number,"translation":string}]}。
-要求：
-1) index 必须覆盖 0 到 ${textList.length - 1} 且每个只出现一次；
-2) 不得新增、删除、合并、拆分条目；
-3) translation 只填翻译后的简体中文文本。
-以下是待翻译数组（含 index）：
-` + JSON.stringify(indexedInput),
-        },
-      ],
-      think: false,
-    },
-    { timeout: config.ollama.timeout },
+    `${config.ollama.url}/api/generate`,
+    buildGeneratePayload(textList, mode),
+    { timeout: config.ollama.timeout }
   );
 
-  const parsed = parseStructuredJson(response.data?.message?.content);
-  return normalizeTranslations(parsed?.translations, textList.length);
-}
-
-async function translateBatchWithFallback(textList) {
-  try {
-    return await requestBatch(textList, config.ollama.temperature);
-  } catch (error) {
-    if (!(error instanceof TranslationCountMismatchError)) {
-      throw error;
-    }
-  }
-
-  try {
-    return await requestBatch(textList, 0);
-  } catch (error) {
-    if (
-      !(error instanceof TranslationCountMismatchError) ||
-      textList.length <= 1
-    ) {
-      throw error;
-    }
-  }
-
-  console.warn(
-    `ollamaProvider >>> 批次 ${textList.length} 条输出不稳定，自动拆分为更小批次重试`,
+  const parsed = parseStructuredJson(
+    response.data?.response ?? response.data?.message?.content
   );
-  const mid = Math.ceil(textList.length / 2);
-  const left = await translateBatchWithFallback(textList.slice(0, mid));
-  const right = await translateBatchWithFallback(textList.slice(mid));
-  return left.concat(right);
+  const translations = parsed?.t ?? parsed?.translations;
+  return normalizeTranslations(translations, textList.length);
 }
 
 async function translateBatch(textList) {
   if (!Array.isArray(textList) || textList.length === 0) {
     return [];
   }
-  return translateBatchWithFallback(textList);
+
+  try {
+    return await requestBatch(textList, "strict");
+  } catch (error) {
+    if (!(error instanceof TranslationCountMismatchError)) {
+      throw error;
+    }
+  }
+
+  // 二次尝试：放宽约束但仍要求同长度返回，优先避免 t=[]。
+  try {
+    return await requestBatch(textList, "relaxed");
+  } catch (error) {
+    if (!(error instanceof TranslationCountMismatchError)) {
+      throw error;
+    }
+  }
+
+  // 最后兜底：仅翻译含日文条目，脚本片段直接回填原文，降低 JSON 失真概率。
+  const source = textList.map((item) => String(item));
+  const targetIndices = [];
+  const targetTexts = [];
+  source.forEach((text, index) => {
+    if (hasJapanese(text)) {
+      targetIndices.push(index);
+      targetTexts.push(text);
+    }
+  });
+
+  if (targetTexts.length === 0) {
+    return source;
+  }
+
+  let translated;
+  try {
+    translated = await requestBatch(targetTexts, "strict");
+  } catch (error) {
+    if (!(error instanceof TranslationCountMismatchError)) {
+      throw error;
+    }
+    try {
+      translated = await requestBatch(targetTexts, "relaxed");
+    } catch (nestedError) {
+      if (!(nestedError instanceof TranslationCountMismatchError)) {
+        throw nestedError;
+      }
+      // 最终兜底：避免同一分页无限重试，直接回填原文继续流程。
+      console.warn("ollamaProvider >>> 批次输出持续异常，已回填原文以继续流程");
+      translated = targetTexts;
+    }
+  }
+  const result = source.slice();
+  targetIndices.forEach((originalIndex, idx) => {
+    result[originalIndex] = translated[idx];
+  });
+  return result;
 }
 
 module.exports = {
